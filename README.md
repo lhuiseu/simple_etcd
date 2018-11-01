@@ -1,0 +1,1 @@
+simple struct of etcd
