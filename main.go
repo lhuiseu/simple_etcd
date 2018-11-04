@@ -15,7 +15,7 @@ func main() {
 	errorC := make(chan error)
 
 	raft.NewRaftNode(*id, strings.Split(*cluster, ","))
-	fmt.Println("end   ",*id,  *cluster)
+	fmt.Println("input   ",*id,  *cluster)
 
 	if _, ok := <-errorC ; ok{
 		fmt.Println("end")

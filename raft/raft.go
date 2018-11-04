@@ -6,13 +6,16 @@ import(
 	"net"
 	"net/http"
 	"github.com/simple_etcd/rafthttp"
+	"github.com/simple_etcd/raft_sdk"
 	"fmt"
+	"time"
 )
 
 type raftNode struct {
 	id int
 	peers []string
 	transport rafthttp.Transport
+	node raft_sdk.Node
 	stopc chan struct{}
 	httpstopc chan struct{}
 	httpdonec chan struct{}
@@ -40,7 +43,16 @@ func (rc *raftNode) startRaft() {
 		rpeers[i] = Peer{ID : uint64(i+1),}
 	}
 
+	//启动与之对应的Node...
+	config := raft_sdk.Config {
+		ID : uint64(rc.id), //为什么raftNode的id不是用的uint64呢？
+		ElectionTick : 10, //当前raft节点的超时时间是10个周期,每个周期的时长，在serveChannel里面设置的是100ms
+	}
+	rc.node = raft_sdk.StartNode(config)
+	fmt.Println("start node lib OK...")
+
 	go rc.serveRaft()
+	go rc.serveChannel()
 
 
 }
@@ -51,7 +63,6 @@ func (rc *raftNode) serveRaft() {
 	if (err != nil) {
 		log.Fatalf("url is err (%v)", err)
 	}
-	fmt.Println("url:",url.Host)
 	//创建listener
 	ln, err := net.Listen("tcp", url.Host)
 	if (err != nil) {
@@ -69,4 +80,18 @@ func (rc *raftNode) serveRaft() {
 
 	close(rc.httpdonec)
 
+}
+
+func (rc *raftNode) serveChannel() {
+
+	//创建定时器
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			rc.node.Tick()
+		}
+	}
 }
