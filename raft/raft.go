@@ -38,9 +38,9 @@ func NewRaftNode(id int, peers []string) {
 
 func (rc *raftNode) startRaft() {
 
-	rpeers := make([]Peer, len(rc.peers))
+	rpeers := make([]raft_sdk.Peer, len(rc.peers))
 	for i := range rpeers {
-		rpeers[i] = Peer{ID : uint64(i+1),}
+		rpeers[i] = raft_sdk.Peer{ID : uint64(i+1),}
 	}
 
 	//启动与之对应的Node...
@@ -48,7 +48,7 @@ func (rc *raftNode) startRaft() {
 		ID : uint64(rc.id), //为什么raftNode的id不是用的uint64呢？
 		ElectionTick : 10, //当前raft节点的超时时间是10个周期,每个周期的时长，在serveChannel里面设置的是100ms
 	}
-	rc.node = raft_sdk.StartNode(config)
+	rc.node = raft_sdk.StartNode(config, rpeers)
 	fmt.Println("start node lib OK...")
 
 	go rc.serveRaft()

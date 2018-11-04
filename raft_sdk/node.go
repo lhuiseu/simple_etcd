@@ -1,6 +1,8 @@
 package raft_sdk
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Node interface {
 	Tick();
@@ -11,7 +13,7 @@ type node struct {
 
 }
 
-func StartNode(c Config) Node {
+func StartNode(c Config, peers []Peer) Node {
 	fmt.Println("启动库node节点....")
 	//new SDK raft. raft并未作为Node的属性而存在，而是在node run的时候，作为参数传入
 	raft := newRaft(c)
@@ -20,6 +22,10 @@ func StartNode(c Config) Node {
 
 	//new SDK Node
 	n := newNode()
+
+	for _, peer := range peers {
+		raft.addNode(peer.ID)
+	}
 
 	//异步run Node
 	go n.run(raft)
